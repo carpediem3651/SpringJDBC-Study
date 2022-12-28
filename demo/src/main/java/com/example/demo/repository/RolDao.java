@@ -19,18 +19,26 @@ import java.util.List;
 @Repository
 public class RoleDao {
     private final JdbcTemplate jdbcTemplate;
+    private SimpleJdbcInsertOperations insertAction;
 
 //    생성자주입
     public RoleDao(DataSource dataSource) {
         jdbcTemplate = new JdbcTemplate(dataSource); // DataSource를 넣는다.
+        insertAction = new SimpleJdbcInsert(dataSource)
+                .withTableName("role");
     }
 
 //INSERT
     public boolean addRole(Role role) {
-        String sql = "INSERT INTO role(role_id, name) VALUE(?, ?))";
-        int result = jdbcTemplate.update(sql, role.getRoleId(), role.getName()); //update메소드는 inset, update, delete SQL문을 실행할 떄 사용한다.
-        return result ==1;
-
+//        String sql = "INSERT INTO role(role_id, name) VALUE(?, ?))";
+//        int result = jdbcTemplate.update(sql, role.getRoleId(), role.getName()); //update메소드는 inset, update, delete SQL문을 실행할 떄 사용한다.
+//        return result ==1;
+//         role은 프로퍼티, roleid, name
+//        INSERT INTO role(role_id, name) VALUES(:roleId, :name)
+//        위와 같은 SQL을 SimpleJdbcInsert가 내부적으로 만든다
+        SqlParameterSource params = new BeanPropertySqlParameterSource(role); //role 객체의 필드명과 테이블의 컬럼명이 같아야 한다.
+        int result = insertAction.execute(params);
+        return result == 1;
     }
 //DELETE
     public boolean deleteRole(int roleId) {
