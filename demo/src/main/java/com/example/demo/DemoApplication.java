@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.cassandra.CassandraProperties;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 @SpringBootApplication
 public class DemoApplication implements CommandLineRunner {
@@ -31,7 +32,12 @@ public class DemoApplication implements CommandLineRunner {
 //		boolean flag = roleDao.deleteRole(3);
 //		System.out.println("flag : " + flag);
 
-		Role role = roleDao.getRole(1);
-		System.out.println(role.getRoleId());
+//		Role role = roleDao.getRole(1);
+//		if(role != null)
+//			System.out.println(role.getRoleId() + ", " + role.getName());
+
+		List<Role> list = roleDao.getRoles();
+		for(Role role : list)
+			System.out.println(role.getRoleId() + "," + role.getName());
 	}
 }

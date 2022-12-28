@@ -2,10 +2,13 @@ package com.example.demo.repository;
 
 import com.example.demo.domain.Role;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsertOperations;
@@ -18,12 +21,12 @@ import java.util.List;
 
 @Repository
 public class RoleDao {
-    private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
     private SimpleJdbcInsertOperations insertAction;
 
 //    생성자주입
     public RoleDao(DataSource dataSource) {
-        jdbcTemplate = new JdbcTemplate(dataSource); // DataSource를 넣는다.
+        jdbcTemplate = new NamedParameterJdbcTemplate(dataSource); // DataSource를 넣는다.
         insertAction = new SimpleJdbcInsert(dataSource)
                 .withTableName("role");
     }
@@ -42,26 +45,25 @@ public class RoleDao {
     }
 //DELETE
     public boolean deleteRole(int roleId) {
-        String sql = "DELETE FROM role WHERE role_id = ?";
-        int result = jdbcTemplate.update(sql, roleId);
+        String sql = "DELETE FROM role WHERE role_id = :roleId";
+        SqlParameterSource params = new MapSqlParameterSource("roleId", roleId);
+        int result = jdbcTemplate.update(sql, params);
         return result == 1;
     }
 
 //SELECT
     // 한 건의 데이터르 읽어옴
     public Role getRole(int roleId) {
-        String sql = "SELECT role_id, name FROM role WHERE role_id = ?";
+        String sql = "SELECT role_id, name FROM role WHERE role_id = :roleId";
         // queryForObject는 1건 또는 0건을 읽어오는 메소드
         // queryForObject(String sql, RowMapper<T> rowMapper(한 건의 데이터를 객체에 담아서 리턴, 매핑/바인딩), @Nullable Object... args)
         try {
-            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-                Role role = new Role(); //DTO
-                role.setRoleId(rs.getInt("role_id"));
-                role.setName(rs.getString("name"));
-                return role;
-            }, roleId);
+            SqlParameterSource params = new MapSqlParameterSource("roleId", roleId);
+            RowMapper<Role> roleRowMapper = BeanPropertyRowMapper.newInstance(Role.class);
+            return jdbcTemplate.queryForObject(sql, params , roleRowMapper);
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
     // 여러건의 데이터를 불러옴
